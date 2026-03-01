@@ -1,23 +1,22 @@
 // components/blockchain/WalletConnect.tsx
 // Wallet connection and management UI component
 
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-  Linking,
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useWallet } from '../../blockchain/hooks/useWallet';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { ACTIVE_NETWORK } from '../../blockchain/config/network';
+import { useWallet } from '../../blockchain/hooks/useWallet';
 
 interface WalletConnectProps {
   onConnect?: () => void;
@@ -48,8 +47,8 @@ const WalletConnect: React.FC<WalletConnectProps> = ({
   const [importLoading, setImportLoading] = useState(false);
 
   const handleCreateWallet = async () => {
-    const success = await createWallet();
-    if (success) {
+    const result = await createWallet();
+    if (result) {
       setShowModal(false);
       onConnect?.();
     }

@@ -1,20 +1,21 @@
 // blockchain/hooks/useBlockchain.ts
 // React hook for blockchain interactions
 
-import { useState, useEffect, useCallback } from 'react';
-import { web3Service } from '../services/web3Service';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCallback, useEffect, useState } from 'react';
 import { priceRecordService } from '../services/priceRecordService';
-import { transactionService } from '../services/transactionService';
 import { supplyChainService } from '../services/supplyChainService';
+import { transactionService } from '../services/transactionService';
+import { web3Service } from '../services/web3Service';
 import {
-  WalletInfo,
+  BatchInfo,
+  HarvestRecord,
   PriceRecord,
   PriceRecordInput,
   RubberTransaction,
   TransactionInput,
   TransactionStatus,
-  BatchInfo,
-  HarvestRecord,
+  WalletInfo,
 } from '../types/blockchain.types';
 
 interface BlockchainState {
@@ -42,10 +43,12 @@ export const useBlockchain = () => {
   const initializeBlockchain = async () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      const walletInfo = await web3Service.getWalletInfo();
+
+      // Read from the same key that useWallet writes to
+      const stored = await AsyncStorage.getItem('blockchain_wallet');
+      const walletInfo = stored ? JSON.parse(stored) : null;
       const pendingTxs = await web3Service.getPendingTransactions();
-      
+
       setState({
         isConnected: walletInfo !== null,
         isLoading: false,
@@ -69,16 +72,16 @@ export const useBlockchain = () => {
   const createWallet = useCallback(async (): Promise<WalletInfo | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const result = await web3Service.createWallet();
-      
+
       setState(prev => ({
         ...prev,
         isConnected: true,
         isLoading: false,
         wallet: result.wallet,
       }));
-      
+
       return result.wallet;
     } catch (error: any) {
       setState(prev => ({
@@ -93,16 +96,16 @@ export const useBlockchain = () => {
   const importWallet = useCallback(async (privateKey: string): Promise<WalletInfo | null> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const walletInfo = await web3Service.importWallet(privateKey);
-      
+
       setState(prev => ({
         ...prev,
         isConnected: true,
         isLoading: false,
         wallet: walletInfo,
       }));
-      
+
       return walletInfo;
     } catch (error: any) {
       setState(prev => ({
@@ -117,7 +120,7 @@ export const useBlockchain = () => {
   const disconnectWallet = useCallback(async (): Promise<void> => {
     try {
       await web3Service.disconnectWallet();
-      
+
       setState({
         isConnected: false,
         isLoading: false,
@@ -153,11 +156,11 @@ export const useBlockchain = () => {
     error?: string;
   }> => {
     const result = await priceRecordService.recordPrice(input);
-    
+
     if (result.success) {
       await refreshPendingCount();
     }
-    
+
     return result;
   }, []);
 
@@ -184,11 +187,11 @@ export const useBlockchain = () => {
     error?: string;
   }> => {
     const result = await transactionService.recordTransaction(input);
-    
+
     if (result.success) {
       await refreshPendingCount();
     }
-    
+
     return result;
   }, []);
 
@@ -235,11 +238,11 @@ export const useBlockchain = () => {
     error?: string;
   }> => {
     const result = await supplyChainService.recordHarvest(farmerId, quantity, gradeId, location);
-    
+
     if (result.success) {
       await refreshPendingCount();
     }
-    
+
     return result;
   }, []);
 
@@ -278,9 +281,9 @@ export const useBlockchain = () => {
   }> => {
     const priceSync = await priceRecordService.syncOfflinePrices();
     const txSync = await transactionService.syncOfflineTransactions();
-    
+
     await refreshPendingCount();
-    
+
     return {
       prices: priceSync,
       transactions: txSync,
@@ -291,7 +294,7 @@ export const useBlockchain = () => {
     const offlinePrices = await priceRecordService.getOfflinePrices();
     const offlineTxs = await transactionService.getOfflineTransactions();
     const pendingTxs = await web3Service.getPendingTransactions();
-    
+
     setState(prev => ({
       ...prev,
       pendingTxCount: offlinePrices.length + offlineTxs.length + pendingTxs.length,
@@ -317,19 +320,19 @@ export const useBlockchain = () => {
   return {
     // State
     ...state,
-    
+
     // Wallet
     createWallet,
     importWallet,
     disconnectWallet,
     refreshWallet,
-    
+
     // Prices
     recordPrice,
     getLatestPrice,
     getPriceHistory,
     verifyPrice,
-    
+
     // Transactions
     recordTransaction,
     updateTransactionStatus,
@@ -338,7 +341,7 @@ export const useBlockchain = () => {
     getBuyerTransactions,
     verifyTransaction,
     getTransactionStats,
-    
+
     // Supply Chain
     recordHarvest,
     recordStage,
@@ -346,10 +349,10 @@ export const useBlockchain = () => {
     getFarmerBatches,
     traceProduct,
     getSupplyChainStats,
-    
+
     // Sync
     syncOfflineData,
-    
+
     // Utils
     getNetworkInfo,
     getExplorerUrl,

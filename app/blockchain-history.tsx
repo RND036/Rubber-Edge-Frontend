@@ -1,41 +1,38 @@
 // app/blockchain-history.tsx
 // Screen to view all blockchain records
 
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-  FlatList,
-  StatusBar,
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLanguage } from '../context/LanguageContext';
-import { useBlockchain } from '../blockchain/hooks/useBlockchain';
-import BlockchainBadge from '../components/blockchain/BlockchainBadge';
-import TransactionHash, { TransactionDetailsCard } from '../components/blockchain/TransactionHash';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBlockchain } from '../blockchain/hooks/useBlockchain';
+import {
+  BatchInfo,
   PriceRecord,
   RubberTransaction,
-  BatchInfo,
 } from '../blockchain/types/blockchain.types';
 import {
-  formatPrice,
   formatAmount,
-  formatTimestamp,
+  formatPrice,
   formatRelativeTime,
-  getGradeDisplayName,
   getGradeColor,
-  getStatusLabel,
   getStatusColor,
+  getStatusLabel
 } from '../blockchain/utils/formatters';
+import BlockchainBadge from '../components/blockchain/BlockchainBadge';
+import TransactionHash from '../components/blockchain/TransactionHash';
+import { useLanguage } from '../context/LanguageContext';
 
 type TabType = 'prices' | 'transactions' | 'batches';
 
@@ -43,10 +40,9 @@ const BlockchainHistoryScreen: React.FC = () => {
   const router = useRouter();
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
-  
+
   const {
     isConnected,
-    wallet,
     pendingTxCount,
     getNetworkInfo,
   } = useBlockchain();
@@ -54,7 +50,8 @@ const BlockchainHistoryScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('prices');
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
+
+
   const [priceRecords, setPriceRecords] = useState<PriceRecord[]>([]);
   const [transactions, setTransactions] = useState<RubberTransaction[]>([]);
   const [batches, setBatches] = useState<BatchInfo[]>([]);
@@ -104,9 +101,9 @@ const BlockchainHistoryScreen: React.FC = () => {
         </View>
         <BlockchainBadge txHash={item.txHash} size="small" />
       </View>
-      
+
       <View style={styles.recordContent}>
-        <Text style={styles.priceValue}>LKR {formatPrice(item.price * 100)}</Text>
+        <Text style={styles.priceValue}>LKR {formatPrice(item.price)}</Text>
         <Text style={styles.recordTime}>{formatRelativeTime(item.timestamp)}</Text>
       </View>
 
@@ -199,7 +196,7 @@ const BlockchainHistoryScreen: React.FC = () => {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" />
-      
+
       {/* Header */}
       <LinearGradient
         colors={['#1B5E20', '#2E7D32']}
